@@ -9,13 +9,13 @@ export default class TodoList extends Component{
         return(
             <div>
                 <div>
-                    <input type="checkbox" onClick={store.checkAll}/> items : {store.TodoListCount}
-                    <button onClick={store.checkDelete}>删除选中</button>
+                    <input type="checkbox" onChange={(e) => store.checkAll()} checked={store.allChecked}/> items : {store.TodoListCount} &nbsp;
+                    <button onClick={(e) => store.checkDelete()}>删除选中</button>
                 </div>
                 {store.todos.map(function (todo, i) {
                     return (
                         <div key={i}>
-                            <input type="checkbox" checked={todo.checked} onClick={(key) => store.checkItem(i)}/> {todo.newtodo}
+                            <input type="checkbox" checked={todo.checked} onChange={(key) => store.checkItem(i)}/> {todo.newtodo} &nbsp;
                             <button onClick={(e) => store.remove(todo)}>删除</button>
                         </div>
                     )
