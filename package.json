@@ -97,6 +97,7 @@
   "devDependencies": {
     "babel-preset-stage-2": "^6.24.1",
     "less": "^2.7.3",
-    "less-loader": "^4.0.5"
+    "less-loader": "^4.0.5",
+    "mobx-react-devtools": "^4.2.15"
   }
 }
