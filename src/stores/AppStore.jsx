@@ -1,49 +1,125 @@
 import { observable, computed, action } from 'mobx';
+import { message } from 'antd';
 class AppStore {
     @observable todos = []; //todos列表
     @observable newtodo = ""; //新添加的todo
-    @observable allChecked = false; //全选
+    @observable selectedRowKeys = []; //选择行的key
+    @observable loading = true; //Table-loading
+    @observable _key = 0; //key
+    @observable total = 0; //数据量
+
+    @action fetchTodos(){
+        fetch('http://localhost/api/todos',{
+            method:'POST',
+            headers: {
+                "Content-type":"application/json"
+            },
+            body: JSON.stringify({
+                current: this.current,
+                pageSize: this.pageSize
+            })
+        })
+            .then((response) => {
+                // console.log(response);
+                response.json().then(function(data){
+                    console.log(data);
+                    this.total = data.count;
+                    this._key = data.data.length===0 ? 0: data.data[data.data.length-1].key;
+                    this.todos = data.data;
+                    this.loading = false;
+                }.bind(this));
+            })
+            .catch((err) => {
+                console.log(err);
+            })
+    }
+
+    @action fetchTodoAdd(){
+        fetch('http://localhost/api/todos/add',{
+            method:'POST',
+            headers: {
+                "Content-type":"application/json"
+            },
+            body: JSON.stringify({
+                key: this._key,
+                todo: this.newtodo,
+            })
+        })
+            .then((response) => {
+                // console.log(response);
+                response.json().then(function(data){
+                    console.log(data);
+                    /*成功添加 总数加1 添加失败 最大_key恢复原有*/
+                    if(data.status){
+                        this.total += 1;
+                        this.todos.push({
+                            key: this._key,
+                            todo: this.newtodo,
+                        });
+                        message.success('添加成功！');
+                    }else{
+                        this._key -= 1;
+                        message.error('添加失败！');
+                    }
+                }.bind(this));
+            })
+            .catch((err) => {
+                console.log(err);
+            })
+    }
+
+    @action fetchTodoRemove(keyArr){
+        fetch('http://localhost/api/todos/remove',{
+            method:'POST',
+            headers: {
+                "Content-type":"application/json"
+            },
+            body: JSON.stringify({
+                key: keyArr
+            })
+        })
+            .then((response) => {
+                console.log(response);
+                response.json().then(function(data){
+                    // console.log(data);
+                    if(data.status){
+                        if(keyArr.length > 1) {
+                            this.todos = this.todos.filter(item => this.selectedRowKeys.indexOf(item.key) === -1);
+                            this.selectedRowKeys = [];
+                        }else{
+                            this.todos = this.todos.filter(item => item.key !== keyArr[0]);
+                        }
+                        this.total -= keyArr.length;
+                        message.success('删除成功！');
+                    }else{
+                        message.error('删除失败！');
+                    }
+                }.bind(this));
+            })
+            .catch((err) => {
+                console.log(err);
+            })
+    }
 
     //添加
     @action AddTodo = () => {
-        this.todos.push({
-            newtodo: this.newtodo,
-            checked: this.allChecked
-        })
+        this._key += 1;
+        this.fetchTodoAdd();
     };
 
-    //添加10
-    @action AddTodo10 = () => {
-        for (let i=0;i<10;i++){
-            this.todos.push({
-                newtodo: this.newtodo,
-                checked: this.allChecked
-            })
-        }
+    //checkbox选择
+    @action onSelectChange = (selectedRowKeys) => {
+        this.selectedRowKeys = selectedRowKeys;
     };
 
     //删除单个
-    @action remove(item) {
-        this.todos.remove(item);
+    @action remove(key) {
+        this.fetchTodoRemove([key]);
     }
 
-    //单选
-    @action checkItem(key) {
-        this.todos[key].checked = !this.todos[key].checked;
-        this.allChecked = !this.isCheckedAll;
-    }
-
-    //全选
-    @action checkAll(){
-        this.allChecked = !this.allChecked;
-        for (let i=0;i<this.todos.length;i++) {
-            this.todos[i].checked = this.allChecked;
-        }
-    }
-
-    //删除选中
-    @action checkDelete(){
-        this.todos = this.todos.filter((todo) => todo.checked === false);
+    //删除选择
+    @action removeSelected() {
+        this.fetchTodoRemove(this.selectedRowKeys);
     }
 
     //计算长度
@@ -51,14 +127,5 @@ class AppStore {
         return this.todos.length;
     }
 
-    //计算是否全选
-    @computed get isCheckedAll() {
-        /*
-            如果有没选中的 返回true allChecked为false
-            如果都选中了 返回false allChecked为true
-            所以设置 allChecked = !返回 就可以了
-        */
-        return this.todos.find((todo) => todo.checked === false);
-    }
 }
 export default AppStore;

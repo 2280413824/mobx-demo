@@ -8,7 +8,9 @@ export default class Menu extends Component{
         return(
             <ul className='menu'>
                 {routers.map(function (route, i) {
-                    return <Link to={route.path} key={i}><li>{route.name}</li></Link>
+                    return <Link to={route.path} key={i}>
+                        <li>{route.name}</li>
+                    </Link>
                 })}
             </ul>
         )

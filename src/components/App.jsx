@@ -1,7 +1,7 @@
 import React, {Component} from 'react';
 import { Router, Switch, Route } from 'react-router-dom';
 import { Provider } from 'mobx-react'
-import Menu from '../components/Menu';
+import Menu from './Menu';
 import NotFound from '../components/NotFound';
 import routers from '../router/router';
 import history from '../router/history';
@@ -13,7 +13,7 @@ class App extends Component {
             <Provider {...this.props}>
                 <Router history={history}>
                     <div>
-                        <Menu/>
+                        <Menu />
                         <Switch>
                             {routers.map((route, i) => {
                                 return <Route key={i} exact path={route.path} component={route.component}/>
